@@ -1,0 +1,38 @@
+{
+    "directories": {
+        "raw_data_dir": "./IMS",
+        "processed_dir": "./preprocessed_data",
+        "result_dir": "./analysis_results",
+        "saved_models_dir": "./saved_models"
+    },
+
+    "data_settings": {
+        "test_sets": ["1st_test", "2nd_test", "3rd_test"],
+        "downsample_ratio": 10,
+        "input_channels": 4,
+        "rul_interval_min": 10
+    },
+
+    "training_hyperparameters": {
+        "device": "cuda",
+        "batch_size": 32,
+        "num_epochs": 20,
+        "continued_epochs": 5,     
+        "learning_rate": 0.0005,
+        "weight_decay": 0.0001,
+        "early_stopping_patience": 5
+    },
+
+    "model_architecture": {
+        "model_dim": 96,
+        "num_heads": 4,
+        "num_layers": 2,
+        "dropout": 0.3
+    },
+
+    "evaluation_parameters": {
+        "threshold": 0.0002,
+        "consecutive_steps": 3,
+        "plot_channel": 2
+    }
+}

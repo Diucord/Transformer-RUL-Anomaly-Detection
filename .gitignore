@@ -1,0 +1,25 @@
+# 바이너리 / 학습 산출물
+*.npy
+*.pt
+*.pkl
+*.h5
+*.log
+
+# 시스템 파일
+__pycache__/
+.DS_Store
+
+# 환경 파일
+.env/
+description.txt
+
+# (옵션) 주피터 노트북
+*.ipynb
+
+# 압축
+*.zip
+
+# 데이터 및 결과 폴더
+IMS/
+saved_models/
+preprocessed_data/

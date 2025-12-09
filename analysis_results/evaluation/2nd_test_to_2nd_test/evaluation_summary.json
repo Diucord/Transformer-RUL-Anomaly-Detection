@@ -1,0 +1,8 @@
+{
+  "train_set": "2nd_test",
+  "test_set": "2nd_test",
+  "mse": 8.078949758782983e-05,
+  "mae": 0.006738170515745878,
+  "failure_idx": null,
+  "estimated_rul": null
+}
