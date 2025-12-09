@@ -99,7 +99,7 @@ x(1:t-1) → x̂_t
 ### Reconstruction Error
 Reconstruction error is calculated between the actual vibration signal ($x_{t}$) and the model’s predicted next timestep ($\hat{x}_{t}$), across $C$ channels:
 
-\text{error}_t = \frac{1}{C} \sum_{c=1}^C (x_{t,c} - \hat{x}_{t,c})^2
+error_t = (1/C) * Σ_c ( x(t,c) − x̂(t,c) )²
 
 This error naturally serves as an anomaly score as it increases when the bearing begins to degrade.
 
