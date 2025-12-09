@@ -1,0 +1,116 @@
+\documentclass[12pt]{article}
+
+% -------------------------------
+% Packages
+% -------------------------------
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+% -------------------------------
+% Title
+% -------------------------------
+\title{\textbf{Experimental Results: Forecasting Behavior, Error Analysis, and RUL Estimation}}
+\author{SeYoon Oh}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Overview}
+This appendix presents the detailed visual results used in the analysis of  
+Transformer-based forecasting, reconstruction error modeling, failure-onset detection,  
+and Remaining Useful Life (RUL) estimation on the IMS Bearing dataset.  
+All figures shown here directly correspond to the experimental pipeline described in  
+Sections 4 and 5 of the dissertation.
+
+% ============================================================
+% FIGURE 1 — Forecasting + Error Curve
+% ============================================================
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/rul_prediction_1to2.png}
+    \caption{
+        \textbf{Forecasting Behavior and RUL Estimation (1st\_test $\rightarrow$ 2nd\_test).}
+        The top panel compares actual vibration signals (blue) with next-step Transformer predictions (orange).
+        During early operation, both curves exhibit high self-similarity, showing that the model successfully 
+        learns the normal-operation manifold.  
+        In later stages, spectral mismatch between the 1st and 2nd test domains yields a progressive divergence 
+        in the predicted trajectory.  
+        The bottom panel displays the time-evolution of the reconstruction MSE (log scale).  
+        The vertical red line marks the detected failure onset, where error escalation becomes sustained and monotonic,
+        confirming the reliability of the proposed detection method.
+    }
+    \label{fig:rul_prediction_1to2}
+\end{figure}
+
+% ============================================================
+% FIGURE 2 — Error Distribution + Gaussian Fit
+% ============================================================
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/error_distribution_gaussian.png}
+    \caption{
+        \textbf{Reconstruction Error Distribution and Gaussian Threshold Derivation.}
+        The histogram shows the empirical distribution of reconstruction errors computed only from the 
+        variance-stable ``normal region.''  
+        A Gaussian model (red curve) is fitted to derive the statistical parameters 
+        $\mu$ and $\sigma$, which form the basis of the adaptive warning thresholds.  
+        Thresholds for Low ($T$), Medium ($1.5T$), and High ($2T$) warning levels are drawn as vertical dashed lines.  
+        This demonstrates that the proposed thresholding mechanism is data-driven and domain-aware,
+        unlike conventional fixed-threshold IMS methods.
+    }
+    \label{fig:error_distribution}
+\end{figure}
+
+% ============================================================
+% FIGURE 3 — Rolling Variance Spike Detection
+% ============================================================
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/rolling_variance_spike.png}
+    \caption{
+        \textbf{Normal Region Detection via Rolling Variance Spike Analysis.}
+        The blue curve denotes the reconstruction error sequence, while the orange curve shows the rolling variance 
+        (window size = 200).  
+        The red dashed line indicates the spike threshold, and the red vertical line marks the first occurrence of a 
+        variance spike, which separates the statistically stable normal region from the degradation phase.  
+        Threshold estimation is performed \emph{only} on the pre-spike region, preventing failure-induced variance 
+        inflation from corrupting baseline statistics.  
+        This mechanism is essential for stable anomaly scoring in non-stationary industrial time-series signals.
+    }
+    \label{fig:variance_spike}
+\end{figure}
+
+% ============================================================
+% EXPLANATORY TEXT (For Dissertation Supplement)
+% ============================================================
+
+\section*{Interpretation and Discussion}
+
+\subsection*{Forecasting Deviation and Failure Onset Behavior}
+As illustrated in Fig.~\ref{fig:rul_prediction_1to2}, the Transformer effectively reconstructs the 
+normal manifold during early operation.  
+Cross-domain evaluation (1st\_test $\rightarrow$ 2nd\_test) introduces additional spectral mismatch, causing prediction 
+deviation to accumulate gradually rather than abruptly.  
+The failure onset aligns with the point where the MSE curve transitions from bounded oscillation to 
+positive-drift escalation, confirming the validity of the anomaly-based onset detection rule.
+
+\subsection*{Gaussian-Based Adaptive Thresholding}
+The error distribution in Fig.~\ref{fig:error_distribution} reveals that normal-region errors are unimodal and 
+near-Gaussian, allowing statistically principled thresholds to be computed.  
+This resolves a major weakness of IMS literature, where fixed global thresholds often fail due to domain-dependent 
+noise differences.  
+The proposed adaptive thresholds scale with $\sigma$, yielding stable warning classification across Test 1/2/3.
+
+\subsection*{Normal Region Extraction via Rolling Variance}
+Fig.~\ref{fig:variance_spike} demonstrates that rolling variance is an effective signal for detecting 
+the boundary between stable and unstable operation.  
+Unlike heuristic ``first 10\%'' approaches, this spike-based method is fully data-driven, robust to noise,  
+and applicable to cross-domain scenarios where degradation dynamics differ significantly.
+
+\end{document}

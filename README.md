@@ -1,56 +1,50 @@
-# Transformer-based Predictive Maintenance System  
-### Reconstruction Error 기반 이상탐지 + Warning Level + RUL(남은 수명) 예측
+# Transformer-Based Forecasting Framework for Bearing Degradation Analysis, Failure Onset Detection, and RUL Estimation
+### A Fully Reproducible Implementation on the IMS Bearing Dataset
 
 This project leverages the **Transformer model** to analyze bearing vibration data (IMS Bearing Dataset), and utilizes the **Reconstruction Error** for **Fault Precursor Detection (Warning)** and **Remaining Useful Life (RUL)** estimation, establishing a complete **Predictive Maintenance (PdM)** system.
 
 ---
-## 1. Core Features | 주요 기능
+## 0. Overview
+This repository implements a Transformer-based forecasting framework for:
 
-### 1.1. Transformer-based Time Series Forecasting | Transformer 기반 시계열 예측
-**Architecture Components:**
-* FeatureExtractor (CNN) for multi-scale feature learning.
-* Trend Layer and Seasonality Layer for time-series decomposition.
-* Stable Block-Sparse Self-Attention mechanism.
-* Robust Transformer Encoder (Residual Connection + LayerNorm).
+- Anomaly detection via reconstruction error
+- Failure onset detection (consecutive exceedance criterion)
+- Remaining Useful Life (RUL) estimation
+- Cross-domain bearing degradation analysis
 
-### 1.2. Reconstruction Error-based Anomaly Detection | 재구성 오차 기반 이상 탐지
-**Detection Logic:**
-* Anomaly is triggered when the reconstruction error between the predicted value and the actual value rises significantly.
-* Implements a 3-Tiered Alert System: Normal (정상) → Warning (경고) → Critical (심각)
+The system performs:
 
-### 1.3. Automatic Failure Point Estimation | 고장 시점 자동 추정
-**Definition:**
-* The point of failure is automatically recognized as the first occurrence of the Critical alert level.
-
-### 1.4. RUL (Remaining Useful Life) Calculation | 남은 수명 계산
-**RUL Logic:**
-* The calculation is precisely based on the actual time intervals (5/10 minutes) recorded in the IMS Dataset.
-* The output is the "Remaining time until failure (in minutes)" from the detected critical point.
-
-### 1.5. RMS-based Statistical Analysis (Academic Rigor) | RMS 기반 통계 분석 (학술적 정당성)
-**Statistical Validation:**
-* RMS Trend Analysis
-* Kolmogorov-Smirnov Normality Test  
-* Levene Variance Stability Test (Homogeneity of Variance)
-
-### 1.6. Performance Comparison | 성능 비교
-**Baseline:**
-* Compares the Transformer's forecasting and anomaly detection performance against a Moving Average (MA) statistical baseline model.
-
-### 1.7. Modular Structure | 유지 보수 용이한 모듈 구조
-**Design:**
-* Project is organized into modular scripts (data_preprocessing.py, model_transformer.py, training.py, evaluation.py) for easy maintenance and expansion.
+1. Data preprocessing (channel reduction, downsampling, normalization)
+2. Transformer forecasting
+3. Reconstruction error analysis
+4. Normal-region extraction via variance spike
+5. Adaptive thresholds based on Gaussian statistics
+6. Multi-level warning system (None/Low/Medium/High)
+7. Failure onset & RUL prediction
+8. Full cross-test evaluation (9 combinations)
 
 ---
-## 2. Dataset Details | 데이터셋 상세 정보
+## 1. Research Problem & Methodology Summary
+
+Traditional vibration-based PHM systems rely on fixed thresholds, RMS monitoring, or handcrafted features. These approaches fail to capture:
+
+* early-stage microscopic degradation,
+* non-stationarity,
+* noise variance differences across environments,
+* cross-domain generalization behavior.
+
+This project addresses these limitations through:
+
+---
+## 2. Dataset Details 
 **IMS Bearing Dataset (Case Western Reserve University)**
 
-### 2.1. Test 1 Details (1st_test):
+### 2.1 Test 1 Details (1st_test):
 * **Initial Channels:** 8 channels (reduced to 4 aggregated channels).
 * **Intervals:** Files 1-43 are 5 minutes; files 44 onwards are 10 minutes.
 * **Failure Mode:** Inner Race Defect (Bearing 3), Roller Element Defect (Bearing 4)
 
-### 2.2. Test 2 & 3 Details (2nd_test, 3rd_test):
+### 2.2 Test 2 & 3 Details (2nd_test, 3rd_test):
 * **Channels:** 4 basic channels
 * **Intervals:** All files are 10 minutes
 * **Failure Modes:** Outer Race Failure (2nd Test - Bearing 1), Outer Race Failure (3rd Test - Bearing 3)
@@ -58,62 +52,125 @@ This project leverages the **Transformer model** to analyze bearing vibration da
 **Note:** These specific time rules are accurately applied in the RUL calculation and RMS trend plotting for precise prognostics.
 
 ---
-## 3. System Architecture | 시스템 구조
+## 3. System Architecture 
 ```bash
-    Raw IMS Data
-        ⬇
-    [Preprocessing]             (data_preprocessing.py)
-    - 8→4 Channel Aggregation (1st_test)
-    - Downsampling & Scaling
-    - .npy Save (Efficient Storage)
-        ⬇
-    [Statistical Analysis]      (data_analysis.py)
-    - RMS Trend, KS Test, Levene Test
-        ⬇
-    [Model Training]            (training.py, model_transformer.py)
-    - AdvancedAutoInformerModel (Trend + Seasonality + Attention)
-        ⬇
-    [Evaluation & Prognostics]  (evaluation.py)
-    - Reconstruction Error Calculation (Anomaly Score)
-    - Warning Level Classification
-    - Failure Point Detection (First Critical)
-    - RUL Calculation (Time-axis based)
-        ⬇
-    [Visualization + Reporting] (main.py, result_output.py)
+    Transformer-RUL-Anomaly-Detection/
+    │
+    ├── main.py                     # End-to-end experimental pipeline
+    ├── training.py                 # Model training loop (MSE loss, AdamW, scheduler)
+    ├── evaluation.py               # Warning system, RUL estimation, plots
+    ├── model_transformer.py        # Advanced AutoInformer-style Transformer model
+    ├── data_preprocessing.py       # Channel reduction, downsampling, sliding windows
+    ├── data_analysis.py            # RMS, K-S test, Levene test, baseline comparison
+    ├── utils.py                    # Time-axis generation, smoothing, warning logic
+    │
+    ├── config.json                 # All experiment settings (thresholds, paths, etc.)
+    ├── analysis_results/           # Auto-generated evaluation results
+    └── README.md                   # (This document)
 ```
 
----
-## 4. Key Mathematical Concepts | 핵심 수리적 개념
+### 4. Preprocessing Pipeline
+**Channel Reduction**
 
-### 4.1. Reconstruction Error (MSE)
+reduced = (ch1 + ch2) / 2
+
+**Downsampling**
+
+x_ds = x[::10] # 20kHz → 2kHz
+
+**Sliding Window**
+
+X = [x1 ... x(T−1)]
+
+y = xT
+
+**Normalization**
+
+Min–max or z-score per test condition.
+
+
+---
+## 5. Transformer Forecasting Model
+
+### Objective
+
+x(1:t-1) → x̂_t
+
+### Reconstruction Error
 Reconstruction error is calculated between the actual vibration signal ($x_{t}$) and the model’s predicted next timestep ($\hat{x}_{t}$), across $C$ channels:
-```bash
+
 \[
 \text{error}_t = \frac{1}{C} \sum_{c=1}^C (x_{t,c} - \hat{x}_{t,c})^2
 \]
-```
+
 This error naturally serves as an anomaly score as it increases when the bearing begins to degrade.
 
-### 4.2. Warning Level Classification  
+### Normal Region Detection (Rolling Variance)
+
+v_t = Var( error(t-w : t) )
+
+Variance spike point defines the end of the normal region.
+
+### Adaptive Threshold Calculation
+
+**Gaussian fit:**
+
+μ, σ = GaussianFit(error_normal)
+
+**Thresholds:**
+
+T_low = μ + 3σ 
+
+T_med = μ + 4.5σ
+
+T_high = μ + 6σ
+
+### Multi-Level Warning Systemn  
 A moving-average window smooths the error to avoid jittery false alarms and defines the alert levels based on a determined threshold ($\tau$).
-```bash
-- \text{avg} < \tau \rightarrow \text{Normal}
-- \tau \le \text{avg} < 1.5\tau \rightarrow \text{Warning}
-- \text{avg} \ge 1.5\tau \rightarrow \text{Critical}
-```
+
+* **None**   : error ≤ T_low
+* **Low**    : T_low < error ≤ T_med
+* **Medium** : T_med < error ≤ T_high
+* **High**   : error > T_high
+
 This classification system mirrors standard industrial predictive maintenance practices.
 
-### 4.3. RUL (Remaining Useful Life) Calculation  
-Based on the IMS dataset’s real-time intervals (5/10 minutes):
+### Failure Onset Detection
+
+FailureOnset = min { t : error(t : t+k-1) > T_high }
+
+
+### RUL (Remaining Useful Life) Calculation  
+
+**IMS sampling:**
+Test1 → [first 43 files = 5 min], [others = 10 min]
+
+Test2/3 → all 10 min
+
+RUL = sum( Δt(j) ) for j = FailureOnset+1 ... End
+
+
+### Cross-Domain Evaluation Matrix
 ```bash
-\[
-\text{RUL} = \text{Time}_{\text{end}} - \text{Time}_{\text{failure}}
-\]
+Train → Test:
+1 → 1 1 → 2 1 → 3
+2 → 1 2 → 2 2 → 3
+3 → 1 3 → 2 3 → 3
 ```
-This provides the remaining time until failure in minutes.
+Each experiment outputs:
+
+* MSE, MAE
+* Failure index
+* RUL estimate
+* Warning sequence
+* Forecasting plots
+* Error curves
+* Normal region detection
+* Gaussian threshold plots
+* Logs & statistics
 
 ---
-## 5. Installation & Execution | 설치 및 실행
+## 6. Installation & Execution 
 
 ### Installation
 ```bash
@@ -150,22 +207,7 @@ python main.py
 ```
 
 ---
-## 6. Output Examples | 출력 예시
-The execution generates detailed plots and reports in the ./predictive_results directory.
-
-1) RMS Trend Plot
-- 시간축(분) 기반 RMS 상승 패턴을 통해 베어링 열화 추세를 확인합니다.
-
-2) Prediction vs Actuals
-- Transformer 모델의 시계열 예측 성능을 시각적으로 검증합니다.
-
-3) Reconstruction Error + Warning Level
-- Normal(0) / Warning(1) / Critical(2)
-
-4) Critical 경보 최초 등장 시점을 고장 시점으로 탐지하여 표시합니다.
-
----
 ## Author
 - Seyoon Oh
-- Korea University : School of Industrial & Management Engineering
+- Korea University - School of Industrial & Management Engineering
 - Email : osy7336@korea.ac.kr
